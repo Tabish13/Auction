@@ -73,7 +73,7 @@ public static void main(String[] args)
 			// To get the value of particular column from all table
 			for(String[] str : data1)
 			{
-				System.out.println(str[2]);
+				System.out.println(str[2]+str[1]);
 				//where 2 is the no of cloumn.
 			}
 			
