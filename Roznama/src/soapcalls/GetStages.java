@@ -12,6 +12,7 @@ import javax.xml.soap.SOAPConnection;
 import javax.xml.soap.SOAPConnectionFactory;
 import javax.xml.soap.SOAPElement;
 import javax.xml.soap.SOAPEnvelope;
+import javax.xml.soap.SOAPException;
 import javax.xml.soap.SOAPMessage;
 import javax.xml.soap.SOAPPart;
 import javax.xml.transform.Source;
@@ -23,7 +24,29 @@ import org.w3c.dom.Document;
 
 public class GetStages {
 
-	public static void main(String args[]) throws Exception {
+	 public ArrayList<String[]> makeGetStages() throws Exception {
+		 
+		// Create SOAP Connection
+			SOAPConnectionFactory soapConnectionFactory = SOAPConnectionFactory.newInstance();
+			SOAPConnection soapConnection = soapConnectionFactory.createConnection();
+
+			// Send SOAP Message to SOAP Server
+			String url = "http://115.113.146.235/RoznamaWebservice/RoznamaService.asmx";
+			String case_id ="1234";
+			SOAPMessage soapResponse = soapConnection.call(createSOAPRequest(case_id), url);
+			// print SOAP Response
+			System.out.print("Response SOAP Message:");
+			//soapResponse.writeTo(System.out);
+			ArrayList<String[]> data = getSOAPResponse(soapResponse);
+			soapConnection.close();
+			return data;
+			/*for (int i = 0; i < data.size(); i++) {
+				String t[]=data.get(i);
+				System.out.println(t[0]+"\n\n"+t[1]);
+			}*/
+			
+	}
+	/*public static void main(String args[]) throws Exception {
 		// Create SOAP Connection
 		SOAPConnectionFactory soapConnectionFactory = SOAPConnectionFactory.newInstance();
 		SOAPConnection soapConnection = soapConnectionFactory.createConnection();
@@ -32,7 +55,6 @@ public class GetStages {
 		String url = "http://115.113.146.235/RoznamaWebservice/RoznamaService.asmx";
 		String case_id ="1234";
 		SOAPMessage soapResponse = soapConnection.call(createSOAPRequest(case_id), url);
-
 		// print SOAP Response
 		System.out.print("Response SOAP Message:");
 		//soapResponse.writeTo(System.out);
@@ -42,7 +64,7 @@ public class GetStages {
 			System.out.println(t[0]+"\n\n"+t[1]);
 		}
 		soapConnection.close();
-	}
+	}*/
 
 	private static SOAPMessage createSOAPRequest(String case_id) throws Exception {
 		MessageFactory messageFactory = MessageFactory.newInstance();
@@ -114,7 +136,7 @@ public class GetStages {
 			int stageslength = document.getElementsByTagName("Stage").getLength();
 			for (int i = 0; i < stageslength; i++) {
 				String dataarr[]= new String[2];   
-				dataarr[0] = document.getElementsByTagName("StageMasterOID").item(i).getTextContent();
+				dataarr[0] = document.getElementsByTagName("CaseTypeStageOID").item(i).getTextContent();
 				dataarr[1]= document.getElementsByTagName("Stage").item(i).getTextContent();
 				finalresult.add(dataarr);
 			}
