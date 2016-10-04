@@ -1,20 +1,11 @@
 package soapcalls;
 
-import java.awt.Image;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.soap.MessageFactory;
@@ -24,42 +15,18 @@ import javax.xml.soap.SOAPConnection;
 import javax.xml.soap.SOAPConnectionFactory;
 import javax.xml.soap.SOAPElement;
 import javax.xml.soap.SOAPEnvelope;
-import javax.xml.soap.SOAPException;
 import javax.xml.soap.SOAPMessage;
 import javax.xml.soap.SOAPPart;
-import javax.xml.transform.Source;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.stream.StreamResult;
-
 import org.apache.commons.codec.binary.Base64;
 import org.w3c.dom.Document;
 
+import Bot.MyLogger;
+
 public class UpdateLastStage {
+	private final static String myclass = UpdateLastStage.class.getName();
+	MyLogger logger = MyLogger.getInstance();
 
-	/*
-	 * public ArrayList<String[]> makeGetStages() throws Exception {
-	 * 
-	 * // Create SOAP Connection SOAPConnectionFactory soapConnectionFactory =
-	 * SOAPConnectionFactory.newInstance(); SOAPConnection soapConnection =
-	 * soapConnectionFactory.createConnection();
-	 * 
-	 * // Send SOAP Message to SOAP Server String url =
-	 * "http://115.113.146.235/RoznamaWebservice/RoznamaService.asmx"; String
-	 * case_id = "1234"; SOAPMessage soapResponse =
-	 * soapConnection.call(createSOAPRequest(case_id), url); // print SOAP
-	 * Response System.out.print("Response SOAP Message:"); //
-	 * soapResponse.writeTo(System.out); ArrayList<String[]> data =
-	 * getSOAPResponse(soapResponse); soapConnection.close(); return data;
-	 * 
-	 * for (int i = 0; i < data.size(); i++) { String t[]=data.get(i);
-	 * System.out.println(t[0]+"\n\n"+t[1]); }
-	 * 
-	 * 
-	 * }
-	 */
-
-	public static void main(String args[]) throws Exception {
+	/*public static void main(String args[]) throws Exception {
 		// Create SOAP Connection
 		SOAPConnectionFactory soapConnectionFactory = SOAPConnectionFactory.newInstance();
 		SOAPConnection soapConnection = soapConnectionFactory.createConnection();
@@ -74,10 +41,12 @@ public class UpdateLastStage {
 		
 
 		soapConnection.close();
-	}
+	}*/
 	
-	public String getdetails(String case_id,String imageUrl) throws Exception
+	public String getdetails(String case_id,String imageUrl) 
 	{
+		try
+		{
 		// Create SOAP Connection
 				SOAPConnectionFactory soapConnectionFactory = SOAPConnectionFactory.newInstance();
 				SOAPConnection soapConnection = soapConnectionFactory.createConnection();
@@ -87,14 +56,20 @@ public class UpdateLastStage {
 				//String case_id = "1234";
 				//String imageUrl = "https://api.telegram.org/file/bot183230543:AAHr9nQwmXVsGZzS8zk6gd-bd0pBC_kl5N4/document/file_22.jpg";
 				SOAPMessage soapResponse = soapConnection.call(createSOAPRequest(case_id,imageUrl), url);
-				soapResponse.writeTo(System.out);
+				logger.info(myclass, "got soap response");
+				//soapResponse.writeTo(System.out);
 				//System.out.println("\n"+printSOAPResponse(soapResponse));
 				String response = printSOAPResponse(soapResponse);
 				soapConnection.close();
 		return response;
+		}catch (Exception e) {
+			
+			logger.error(myclass, "method getdetails error", e);
+			return null;
+		}
 	}
 
-	private static SOAPMessage createSOAPRequest(String case_id,String imageUrl) throws Exception {
+	private  SOAPMessage createSOAPRequest(String case_id,String imageUrl) throws Exception {
 		MessageFactory messageFactory = MessageFactory.newInstance();
 		SOAPMessage soapMessage = messageFactory.createMessage();
 		SOAPPart soapPart = soapMessage.getSOAPPart();
@@ -129,6 +104,7 @@ public class UpdateLastStage {
 		URL url = new URL(imageUrl);
 		BufferedInputStream bis = new BufferedInputStream(url.openConnection().getInputStream());
 		String bin = new String(Base64.encodeBase64(getBytesFromInputStream(bis)));
+		logger.info(myclass, "image to input stream");
 		soapBodyElem3.addTextNode(bin);
 
 		/*
@@ -150,18 +126,20 @@ public class UpdateLastStage {
 		soapMessage.saveChanges();
 
 		/* Print the request message */
-		System.out.print("Request SOAP Message:");
+		logger.info(myclass, "soap request created");
+		/*System.out.print("Request SOAP Message:");
 		soapMessage.writeTo(System.out);
-		System.out.println();
+		System.out.println();*/
 
 		return soapMessage;
 	}
 
 	// Method used to print the SOAP Response
-	public static String printSOAPResponse(SOAPMessage soapResponse) throws Exception {
+	public String printSOAPResponse(SOAPMessage soapResponse) throws Exception {
 		try {
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
-			soapResponse.writeTo(out);
+			//soapResponse.writeTo(out);
+			
 			byte[] test = out.toByteArray();
 			//System.out.println("asadadada" + Arrays.toString(test));
 			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -177,6 +155,7 @@ public class UpdateLastStage {
 
 			return response;
 		} catch (Exception e) {
+			logger.error(myclass, "method('printSOAPResponse()')", e);
 			e.printStackTrace();
 			return null;
 		}
@@ -194,40 +173,6 @@ public class UpdateLastStage {
 
 			return os.toByteArray();
 		}
-	}
-
-	public static byte[] getBytesFromFile(File file) throws IOException {
-		InputStream is = new FileInputStream(file);
-
-		// Get the size of the file
-		long length = file.length();
-
-		// You cannot create an array using a long type.
-		// It needs to be an int type.
-		// Before converting to an int type, check
-		// to ensure that file is not larger than Integer.MAX_VALUE.
-		if (length > Integer.MAX_VALUE) {
-			// File is too large
-		}
-
-		// Create the byte array to hold the data
-		byte[] bytes = new byte[(int) length];
-
-		// Read in the bytes
-		int offset = 0;
-		int numRead = 0;
-		while (offset < bytes.length && (numRead = is.read(bytes, offset, bytes.length - offset)) >= 0) {
-			offset += numRead;
-		}
-
-		// Ensure all the bytes have been read in
-		if (offset < bytes.length) {
-			throw new IOException("Could not completely read file " + file.getName());
-		}
-
-		// Close the input stream and return bytes
-		is.close();
-		return bytes;
 	}
 
 }
