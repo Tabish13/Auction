@@ -1,8 +1,12 @@
 package soapcalls;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
+
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.soap.MessageFactory;
@@ -24,47 +28,30 @@ import org.w3c.dom.Document;
 
 public class GetStages {
 
-	 public ArrayList<String[]> makeGetStages() throws Exception {
-		 
-		// Create SOAP Connection
-			SOAPConnectionFactory soapConnectionFactory = SOAPConnectionFactory.newInstance();
-			SOAPConnection soapConnection = soapConnectionFactory.createConnection();
+	public ArrayList<String[]> makeGetStages(String case_id) throws Exception {
 
-			// Send SOAP Message to SOAP Server
-			String url = "http://115.113.146.235/RoznamaWebservice/RoznamaService.asmx";
-			String case_id ="1234";
-			SOAPMessage soapResponse = soapConnection.call(createSOAPRequest(case_id), url);
-			// print SOAP Response
-			System.out.print("Response SOAP Message:");
-			//soapResponse.writeTo(System.out);
-			ArrayList<String[]> data = getSOAPResponse(soapResponse);
-			soapConnection.close();
-			return data;
-			/*for (int i = 0; i < data.size(); i++) {
-				String t[]=data.get(i);
-				System.out.println(t[0]+"\n\n"+t[1]);
-			}*/
-			
-	}
-	/*public static void main(String args[]) throws Exception {
 		// Create SOAP Connection
 		SOAPConnectionFactory soapConnectionFactory = SOAPConnectionFactory.newInstance();
 		SOAPConnection soapConnection = soapConnectionFactory.createConnection();
 
 		// Send SOAP Message to SOAP Server
 		String url = "http://115.113.146.235/RoznamaWebservice/RoznamaService.asmx";
-		String case_id ="1234";
+		//String case_id = "1234";
 		SOAPMessage soapResponse = soapConnection.call(createSOAPRequest(case_id), url);
 		// print SOAP Response
 		System.out.print("Response SOAP Message:");
-		//soapResponse.writeTo(System.out);
+		// soapResponse.writeTo(System.out);
 		ArrayList<String[]> data = getSOAPResponse(soapResponse);
-		for (int i = 0; i < data.size(); i++) {
-			String t[]=data.get(i);
-			System.out.println(t[0]+"\n\n"+t[1]);
-		}
 		soapConnection.close();
-	}*/
+		
+		return data;
+		/*
+		 * for (int i = 0; i < data.size(); i++) { String t[]=data.get(i);
+		 * System.out.println(t[0]+"\n\n"+t[1]); }
+		 */
+
+	}
+	
 
 	private static SOAPMessage createSOAPRequest(String case_id) throws Exception {
 		MessageFactory messageFactory = MessageFactory.newInstance();
@@ -106,42 +93,31 @@ public class GetStages {
 	}
 
 	// Method used to print the SOAP Response
-	public static ArrayList<String []> getSOAPResponse(SOAPMessage soapResponse) throws Exception {
-		TransformerFactory transformerFactory = TransformerFactory.newInstance();
-		Transformer transformer = transformerFactory.newTransformer();
-		Source sourceContent = soapResponse.getSOAPPart().getContent();
-		System.out.print("\nResponse SOAP Message:");
-		StreamResult result = new StreamResult(System.out);
-		transformer.transform(sourceContent, result);
-
+	public static ArrayList<String[]> getSOAPResponse(SOAPMessage soapResponse) throws Exception {
 		try {
-			// Write response into file
-			FileOutputStream out = null;
-			out = new FileOutputStream("C:/Users/Intern7/Desktop/SOAP Response/output.xml");
+			ByteArrayOutputStream out = new ByteArrayOutputStream();
 			soapResponse.writeTo(out);
-
-			// logger.info(myclass, );
-
-			// Read response from file
-			File inputFile = new File("C:/Users/Intern7/Desktop/SOAP Response/output.xml");
-
-			DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
-			DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
-			Document document = documentBuilder.parse(inputFile);
+			byte[] test = out.toByteArray();
+			//System.out.println("asadadada" + Arrays.toString(test));
+			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+			factory.setNamespaceAware(true);
+			DocumentBuilder builder = factory.newDocumentBuilder();
+			Document document = builder.parse(new ByteArrayInputStream(test));
 			document.getDocumentElement().normalize();
 
 			// Access nodes
-			ArrayList<String []> finalresult = new ArrayList<>();
-			
+			ArrayList<String[]> finalresult = new ArrayList<>();
+
 			int stageslength = document.getElementsByTagName("Stage").getLength();
+			if(stageslength>0)
+			{
 			for (int i = 0; i < stageslength; i++) {
-				String dataarr[]= new String[2];   
+				String dataarr[] = new String[2];
 				dataarr[0] = document.getElementsByTagName("CaseTypeStageOID").item(i).getTextContent();
-				dataarr[1]= document.getElementsByTagName("Stage").item(i).getTextContent();
+				dataarr[1] = document.getElementsByTagName("Stage").item(i).getTextContent();
 				finalresult.add(dataarr);
 			}
-			
-			
+			}
 			return finalresult;
 		} catch (Exception e) {
 			e.printStackTrace();
