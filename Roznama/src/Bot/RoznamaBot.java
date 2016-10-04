@@ -31,6 +31,7 @@ public class RoznamaBot extends HttpServlet {
      * Default constructor. 
      */
 	private final static String myclass = RoznamaBot.class.getName();
+	MyLogger logger = MyLogger.getInstance();
     public RoznamaBot() {
         // TODO Auto-generated constructor stub
     }
@@ -47,7 +48,7 @@ public class RoznamaBot extends HttpServlet {
 		if(check!=null)
 		{
 			try {
-				MyLogger logger = MyLogger.getInstance();
+				
 				PrintWriter out = response.getWriter();
 				SendBotMsg sendmsg = new SendBotMsg();
 				JSONObject contextobj = new JSONObject(request.getParameter("contextobj"));
@@ -142,7 +143,7 @@ public class RoznamaBot extends HttpServlet {
 						if(msg.contains("case")||msg.equals("1"))
 						{
 							logger.info(myclass, "View case progress selected");
-							db.setCustomerDetails(tablename, context_id, "state", "choosecase");
+							db.setCustomerDetails(tablename, context_id, "state", "getcaseid");
 							String case_id = db.getState(tablename, context_id, "case_id");
 							// make soap call with case_id give the results.
 							GetStages getstage = new GetStages();
@@ -164,7 +165,8 @@ public class RoznamaBot extends HttpServlet {
 							}
 							//System.out.println(print);
 							sendmsg.sendMessage(contextobj, print, botname);
-							sendmsg.sendMessage(contextobj, "What would you like to do?\n1) View Case Progress\n2) Upload Case Document\ne.g Type '1' for view case progress.", botname);
+							sendmsg.sendMessage(contextobj, "Please Enter the Case ID.", botname);
+							//sendmsg.sendMessage(contextobj, "What would you like to do?\n1) View Case Progress\n2) Upload Case Document\ne.g Type '1' for view case progress.", botname);
 							
 							//sendmsg.sendMessage(contextobj,"{\"type\":\"poll\",\"question\":\"Is there anything else i can help you with.\",\"msgid\":\"poll_212\"}" , botname);
 							//sendmsg.sendMessage(contextobj,"{\"type\":\"survey\",\"question\":\"What would you like to do?\",\"options\":[\"view case progress\",\"upload case document\"]}", botname);
@@ -191,9 +193,9 @@ public class RoznamaBot extends HttpServlet {
 						String result = ls.getdetails(case_id, ogmsg);
 						if(result!=null)
 						{
-							db.setCustomerDetails(tablename, context_id, "state", "choosecase");
+							db.setCustomerDetails(tablename, context_id, "state", "getcaseid");
 							sendmsg.sendMessage(contextobj, result, botname);
-							sendmsg.sendMessage(contextobj, "What would you like to do?\n1) View Case Progress\n2) Upload Case Document\ne.g Type '1' for view case progress.", botname);
+							sendmsg.sendMessage(contextobj, "Please Enter the Case ID.", botname);
 						}
 						else
 						{

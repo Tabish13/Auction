@@ -23,7 +23,7 @@ public class Zohodb {
 		ByteArrayOutputStream output= new ByteArrayOutputStream();
 		rc.exportDataUsingSQL(uri, "JSON", output, "select * from users_mobile_no where mobile_no = "+mobile_no, null);
 		JSONObject json=new JSONObject(output.toString());
-		//System.out.println("string: "+output.toString());
+		System.out.println("string: "+output.toString());
 		rows=json.getJSONObject("response").getJSONObject("result").getJSONArray("rows");
 		System.out.println(rows);
 		if(rows.length()>0)
