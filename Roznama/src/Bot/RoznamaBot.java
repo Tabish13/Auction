@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -16,6 +17,7 @@ import org.json.JSONObject;
 
 import Bot.dbhandler.Dbhandler;
 import Bot.zoho.Zohodb;
+import soapcalls.GetLitigations;
 import soapcalls.GetStages;
 import soapcalls.UpdateLastStage;
 import soapcalls.ValidateCaseNumber;
@@ -78,7 +80,7 @@ public class RoznamaBot extends HttpServlet {
 					else if(state.equals("getno"))
 					{
 						String mobile_regex = "^(?:(?:\\+|0{0,2})91(\\s*[\\-]\\s*)?|[0]?)?[789]\\d{9}$";
-						if(msg.matches(mobile_regex)||msg.equals("9"))
+						if(msg.matches(mobile_regex)||msg.equals("9")||msg.equals("1234567890"))
 						{
 							logger.info(myclass, "Valid mobile syntax.");
 							Zohodb mb = new Zohodb();
@@ -99,7 +101,7 @@ public class RoznamaBot extends HttpServlet {
 						else
 						{
 							logger.info(myclass, "INvalid mobile syntax.");
-							out.println("Invalid mobile number.");
+							out.println("Invalid mobile number.\nEnter registered mobile number.");
 						}
 						
 					}
@@ -110,12 +112,26 @@ public class RoznamaBot extends HttpServlet {
 						if(msg.equals("1234"))
 						{
 							logger.info(myclass, "OTP is valid");
+							
 							db.setCustomerDetails(tablename, context_id, "state", "getcaseid");
-							out.println("Please Enter the Case ID.");
+							
+							//GET ALL CASE NUMBER AND LET USER ENTER THE CASE NUMBER FROM ABOVE
+							GetLitigations getlitigations = new GetLitigations();
+							String mobile_no = db.getState(tablename, context_id, "mobile");
+							ArrayList<String[]> data =  getlitigations.makeGetLitigations(mobile_no);
+							String print = "";
+							for (int i = 0; i < data.size(); i++) {
+								//send the case number using send msg to the user and take the case id from
+								String [] litigation = data.get(i);
+								print +="Case Number: "+litigation[1]+"\n";
+								//sendmsg.sendMessage(contextobj, "Case Number: "+litigation[1], botname);
+							}
+							sendmsg.sendMessage(contextobj, print, botname);
+							sendmsg.sendMessage(contextobj, "Please Enter the Case ID.", botname);
 						}else
 						{
 							logger.info(myclass, "Enter valid OTP");
-							out.println("Enter Valid OTP.");
+							out.println("Invalid OTP.");
 						}
 					}
 					else if(state.equals("getcaseid"))
@@ -129,8 +145,8 @@ public class RoznamaBot extends HttpServlet {
 						db.setCustomerDetails(tablename, context_id, "state", "choosecase");
 						//System.out.println("in get case id");
 						logger.info(myclass, "Inside get case id");
-						out.println("What would you like to do?\n1) View Case Progress\n2) Upload Case Document\ne.g Type '1' for view case progress.");
-						//out.println("{\"type\":\"survey\",\"question\":\"What would you like to do?\",\"options\":[\"view case progress\",\"upload case document\"]}");
+						//out.println("What would you like to do?\n1) View Case Progress\n2) Upload Case Document\ne.g Type '1' for view case progress.");
+						out.println("{\"type\":\"survey\",\"question\":\"What would you like to do?\",\"options\":[\"view case progress\",\"upload case document\"]}");
 						}
 						else
 						{
@@ -140,7 +156,7 @@ public class RoznamaBot extends HttpServlet {
 					}
 					else if(state.equals("choosecase"))
 					{
-						if(msg.contains("case")||msg.equals("1"))
+						if(msg.contains("view")||msg.equals("1")||msg.equals("view case progress"))
 						{
 							logger.info(myclass, "View case progress selected");
 							db.setCustomerDetails(tablename, context_id, "state", "getcaseid");
@@ -176,11 +192,16 @@ public class RoznamaBot extends HttpServlet {
 								out.println("No such case id found");
 							}
 							}
-						else if(msg.equals("2")||msg.contains("upload"))
+						else if(msg.equals("2")||msg.contains("upload")||msg.equals("upload case document"))
 						{
 							logger.info(myclass, "Upload case document selected.");
 							db.setCustomerDetails(tablename, context_id, "state", "uploadcase");
 							out.println("Upload your case document.");
+						}
+						else
+						{
+							//out.println("Please provide valid input\nWhat would you like to do?\n1) View Case Progress\n2) Upload Case Document\ne.g Type '1' for view case progress.");
+							out.println("{\"type\":\"survey\",\"question\":\"Please provide valid input\nWhat would you like to do?\",\"options\":[\"view case progress\",\"upload case document\"]}");
 						}
 					}
 					else if(state.equals("uploadcase"))
@@ -224,6 +245,12 @@ public class RoznamaBot extends HttpServlet {
 					{
 						out.println("Sorry can't get you.");
 					}
+				}
+				else
+				{
+					out.println("Not getting valid input.");
+					logger.info(myclass, "not valid input(type ! image or msg)"+messageobj);
+					//System.out.println("not valid unput"+messageobj);
 				}
 				
 			} catch (Exception e) {
